@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    au.csiro.ontoserver: db
+  name: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      au.csiro.ontoserver: db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        au.csiro.ontoserver: db
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: trust
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.image.port }}
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready 
+                - -U 
+                - postgres
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: db
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: pgdata
+      restartPolicy: Always
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: pgdata

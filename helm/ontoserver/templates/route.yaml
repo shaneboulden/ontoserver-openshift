@@ -1,0 +1,16 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: ontoserver
+  labels:
+    au.csiro: ontoserver
+spec:
+  to:
+    kind: Service
+    name: {{ include "ontoserver.fullname" . }}
+    weight: 100
+  port:
+    targetPort: {{ .Values.service.port }}
+  tls:
+    termination: edge
+  wildcardPolicy: None
